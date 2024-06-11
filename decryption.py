@@ -8,7 +8,7 @@ def decrypt_string(encrypted_text, key):
     encrypted_data = encrypted_text[16:]
     
     # Create a cipher object using AES in CBC mode with the extracted IV
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=default_backend())
     decryptor = cipher.decryptor()
     
     # Decrypt the encrypted data

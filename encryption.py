@@ -8,7 +8,7 @@ def encrypt_string(plain_text, key):
     iv = os.urandom(16)
     
     # Create a cipher object
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=default_backend())
     encryptor = cipher.encryptor()
     
     # Pad the plain text to be multiple of block size
