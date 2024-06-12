@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox,simpledialog
+from tkinter import filedialog, messagebox, simpledialog
 import customtkinter as ctk
 import encryption as enc
 import decryption as decr
@@ -8,13 +8,17 @@ import sha
 import os
 import make_key as mk
 import filename
+import login_screen as lg
+import passowrd as ps
 users_password = None
 user_name = None
 MAX_ENCRYPTION_CYCLES = 25
+
 def get_file_name_without_extension(file_path):
     file_name = os.path.basename(file_path)
     base_name, _ = os.path.splitext(file_name)
     return base_name
+
 def save():
     global users_password
     global user_name
@@ -64,6 +68,8 @@ def save():
         print("File saved successfully.")
 
 def open_file():
+    global users_password
+    global user_name
     # Open the file dialog to select the encrypted file
     file_path = filedialog.askopenfilename(filetypes=[("Encrypted File", "*.enc")])
     if file_path:
@@ -99,19 +105,19 @@ def open_file():
         
         print("File opened successfully.")
 
-
 def login_screen():
     global users_password
     global user_name
-    def load_password():
+
+    def load_credentials():
         if os.path.exists("shadow"):
             with open("shadow", "r") as shadow_file:
-                return shadow_file.read().strip()
+                return shadow_file.read().strip().split(':')
         return None
 
-    def save_password(hashed_password):
+    def save_credentials(username, hashed_password):
         with open("shadow", "w") as shadow_file:
-            shadow_file.write(hashed_password)
+            shadow_file.write(f"{username}:{hashed_password}")
 
     def validate_login():
         global users_password
@@ -119,9 +125,11 @@ def login_screen():
         # Function to validate the username and password
         username = username_entry.get()
         password = password_entry.get()
+        # print
+        # print(f"Username: {username}, Password: {password}")
 
-        # For simplicity, let's say valid username is "user" and password is "password"
-        if username == "user" and sha.check_password(password, hashed_password):
+        if username == stored_username and sha.check_password(password, stored_hashed_password):
+            print("Login successful")
             login_window.destroy()  # Close the login window
             root.deiconify()  # Show the main application window
             users_password = password
@@ -129,21 +137,72 @@ def login_screen():
         else:
             messagebox.showerror("Error", "Invalid username or password")
 
+    def create_credentials():
+        global stored_username
+        global stored_hashed_password
+
+        new_username = new_username_entry.get()
+        new_password = new_password_entry.get()
+        confirm_password = confirm_password_entry.get()
+        
+        if new_password != confirm_password:
+            messagebox.showerror("Error", "Passwords do not match")
+            return
+        if(ps.test_password(new_password) == False):
+            messagebox.showerror("Error", "Your password is to week")
+            return
+        stored_hashed_password = sha.hash_password(new_password)
+        save_credentials(new_username, stored_hashed_password)
+        stored_username = new_username
+        create_window.destroy()
+        login_screen()
+
+    # Load stored credentials
+    credentials = load_credentials()
+    if credentials:
+        stored_username, stored_hashed_password = credentials
+    else:
+        create_window = ctk.CTkToplevel(root)
+        create_window.title("Create Credentials")
+
+        ctk.CTkLabel(create_window, text="Create Username:").pack()
+        new_username_entry = ctk.CTkEntry(create_window)
+        new_username_entry.pack()
+
+        ctk.CTkLabel(create_window, text="Create Password:").pack()
+        new_password_entry = ctk.CTkEntry(create_window, show="*")
+        new_password_entry.pack()
+
+        ctk.CTkLabel(create_window, text="Confirm Password:").pack()
+        confirm_password_entry = ctk.CTkEntry(create_window, show="*")
+        confirm_password_entry.pack()
+
+        create_button = ctk.CTkButton(create_window, text="Create", command=create_credentials)
+        create_button.pack()
+
+        # Center the create window on the screen
+        create_window.geometry("+{}+{}".format(
+            int(create_window.winfo_screenwidth() / 2 - create_window.winfo_reqwidth() / 2),
+            int(create_window.winfo_screenheight() / 2 - create_window.winfo_reqheight() / 2)))
+
+        root.withdraw()
+        return
+
     # Create a new window for the login screen
-    login_window = tk.Toplevel(root)
+    login_window = ctk.CTkToplevel(root)
     login_window.title("Login")
 
     # Create and place labels and entry widgets for username and password
-    tk.Label(login_window, text="Username:").pack()
-    username_entry = tk.Entry(login_window)
+    ctk.CTkLabel(login_window, text="Username:").pack()
+    username_entry = ctk.CTkEntry(login_window)
     username_entry.pack()
 
-    tk.Label(login_window, text="Password:").pack()
-    password_entry = tk.Entry(login_window, show="*")
+    ctk.CTkLabel(login_window, text="Password:").pack()
+    password_entry = ctk.CTkEntry(login_window, show="*")
     password_entry.pack()
 
     # Create and place a login button
-    login_button = tk.Button(login_window, text="Login", command=validate_login)
+    login_button = ctk.CTkButton(login_window, text="Login", command=validate_login)
     login_button.pack()
 
     # Center the login window on the screen
@@ -153,15 +212,6 @@ def login_screen():
 
     # Hide the main application window until login is successful
     root.withdraw()
-
-    # Load hashed password from file
-    hashed_password = load_password()
-
-    # If no hashed password exists, prompt for a new one
-    if not hashed_password:
-        new_password = simpledialog.askstring("Create Password", "No password found. Please enter a new password:")
-        hashed_password = sha.hash_password(new_password)
-        save_password(hashed_password)
 
 # Create the main application window
 root = ctk.CTk()
@@ -189,7 +239,8 @@ edit_menu.add_command(label="Copy", command=lambda: root.event_generate("<<Copy>
 edit_menu.add_command(label="Paste", command=lambda: root.event_generate("<<Paste>>"))
 menu_bar.add_cascade(label="Edit", menu=edit_menu)
 
-# Create a 'Help' menu
+# Create a 'Help'
+
 help_menu = tk.Menu(menu_bar, tearoff=0)
 help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "This is a text editor with encryption capabilities."))
 menu_bar.add_cascade(label="Help", menu=help_menu)
