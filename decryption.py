@@ -1,23 +1,19 @@
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.backends import default_backend
 import os
-def decrypt_string(encrypted_text, key):
-    # Extract the IV from the beginning of the encrypted text
-    iv = encrypted_text[:16]
-    encrypted_data = encrypted_text[16:]
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.backends import default_backend
+def decrypt_string(encrypted_data, key):
+    # Extract the nonce from the beginning of the encrypted data
+    nonce = encrypted_data[:12]
     
-    # Create a cipher object using AES in CBC mode with the extracted IV
-    cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=default_backend())
-    decryptor = cipher.decryptor()
+    # Extract the actual encrypted data
+    ciphertext = encrypted_data[12:]
     
-    # Decrypt the encrypted data
-    padded_data = decryptor.update(encrypted_data) + decryptor.finalize()
+    # Create AESGCM object
+    aesgcm = AESGCM(key)
     
-    # Unpad the decrypted data
-    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-    plain_text = unpadder.update(padded_data) + unpadder.finalize()
+    # Decrypt the data
+    decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
     
-    return plain_text.decode()
-
-
+    # Return the decrypted plain text
+    return decrypted_data.decode()

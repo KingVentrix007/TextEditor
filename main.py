@@ -74,7 +74,7 @@ def open_file():
         encrypted_text = base64.b64decode(encrypted_text_b64)
         
         # Open the corresponding key file
-        key_file_path = gfile_path + ".key"
+        key_file_path = file_path + ".key"
         with open(key_file_path, 'r') as key_file:
             key_b64 = key_file.read()
         
