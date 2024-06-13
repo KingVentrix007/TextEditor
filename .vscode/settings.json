@@ -1,6 +1,0 @@
-{
-    "sonarlint.connectedMode.project": {
-        "connectionId": "WSL connction SonarCloud",
-        "projectKey": "KingVentrix007_TextEditor"
-    }
-}
