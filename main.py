@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
-import text_editor
+import editor.text_editor as text_editor
 import customtkinter as ctk
 
 # Create the main window

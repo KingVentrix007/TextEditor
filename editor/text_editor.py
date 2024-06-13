@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 import customtkinter as ctk
-import encryption as enc
-import decryption as decr
+import editor.encryption as enc
+import editor.decryption as decr
 import base64
-import sha
+import editor.sha as sha
 import os
-import make_key as mk
+import editor.make_key as mk
 import filename
-import login_screen as lg
+import editor.login_screen as lg
 import passowrd as ps
 
 class TextEditorApp:
